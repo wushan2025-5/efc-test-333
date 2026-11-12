@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>tesi demo</title>
+</head>
+<body>
+  <h1>mainPage</h1>
+
+
+<!-- this is subpage-->
+  <tesi:include
+  name="tesi-test"
+  version="0.0.1"
+  cachekey="1"
+  ttl="300"
+  src="http://osspublic.finalexam.cn/subpage.html"
+>
+</tesi:include>
+
+  <tesi:remove version="0.0.1">
+    <a href="www.example.com">This should be removed</a>
+  </tesi:remove>
+
+  <!--tesi
+         <script type="text/javascript">
+             alert("this is javascript inside tesi comment");
+         </script>
+  -->
+</body>
+</html>
+
+

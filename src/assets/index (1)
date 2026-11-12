@@ -1,0 +1,12 @@
+// index.ts
+export default {
+  async fetch(request: Request): Promise<Response> {
+    return new Response('Hello from Edge!', {
+      status: 200,
+      headers: {
+        'Content-Type': 'text/plain; charset=utf-8',
+        'X-Edge-Function': 'simple-hello'
+      }
+    });
+  }
+};
