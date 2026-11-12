@@ -1,0 +1,42 @@
+{
+  "name": "Express + app.listen 风格",
+  "framework": "express",
+  "mode": "direct",
+  "entry": "server.js",
+  "port": 3000,
+  "warmupTimeoutMs": 8000,
+  "assertions": [
+    {
+      "path": "/",
+      "method": "GET",
+      "expectedStatus": 200,
+      "bodyContains": "Express"
+    },
+    {
+      "path": "/api/health",
+      "method": "GET",
+      "expectedStatus": 200,
+      "bodyJsonSubset": { "ok": true, "framework": "express", "flavor": "listen" }
+    },
+    {
+      "path": "/api/users/42",
+      "method": "GET",
+      "expectedStatus": 200,
+      "bodyJsonSubset": { "user": "42", "source": "express" }
+    },
+    {
+      "path": "/api/echo",
+      "method": "POST",
+      "headers": { "content-type": "application/json" },
+      "body": { "hello": "world", "n": 42 },
+      "expectedStatus": 200,
+      "bodyJsonSubset": { "received": { "hello": "world", "n": 42 } }
+    },
+    {
+      "path": "/api/nope-does-not-exist",
+      "method": "GET",
+      "expectedStatus": 404
+    }
+  ],
+  "includeDirs": ["public"]
+}

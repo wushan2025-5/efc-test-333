@@ -1,0 +1,13 @@
+{
+  "templateName": "Express + app.listen 留言板",
+  "templateId": "{{TEMPLATE_ID}}",
+  "framework": "express",
+  "description": "Express 经典 app.listen 风格，演示异步路由包装与全局错误处理中间件。",
+  "icon": "🎧",
+  "category": "starter",
+  "entry": "server.js",
+  "rootDirectory": "/backend-tests/express-listen",
+  "deployUrl": "{{DEPLOY_URL}}",
+  "demoUrl": "{{DEMO_URL}}",
+  "tags": ["express", "listen", "async", "错误处理", "留言板"]
+}
