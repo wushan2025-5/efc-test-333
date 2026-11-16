@@ -6,5 +6,5 @@
     "directory": "/src/assets",
     "notFoundStrategy": "singlePageApplication"
   },
-"edgeFunctionFirst": ["/edge/", "/promo/"],
+"edgeFunctionFirst": ["/edge/", "/promo/"]
 }
