@@ -6,7 +6,7 @@
     "directory": "/src/assets",
     "notFoundStrategy": "singlePageApplication"
   },
-"edgeFunctionFirst": true,
+"edgeFunctionFirst": false,
 "regionFunction": {
     // 函数规格，基础版固定为 1c2g
     //"instanceType": "1c2g",
