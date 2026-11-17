@@ -9,7 +9,7 @@
 "edgeFunctionFirst": Null,
 "regionFunction": {
     // 函数规格，基础版固定为 1c2g
-    "instanceType": "16c32g",
+    "instanceType": "4C12G",
     // 每个部署区域的最小实例数
     //"minInstances": 1,
     // 单实例可同时执行的请求数
