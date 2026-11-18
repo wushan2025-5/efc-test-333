@@ -10,11 +10,11 @@ const delay = (ms) => (req, res, next) => setTimeout(next, ms);
 
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
-app.use('/api', delay(RESPONSE_DELAY_MS));
 
 const asyncHandler = (fn) => (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
 
 app.get('/api/health', (req, res) => {
+  delay(RESPONSE_DELAY_MS);
   res.json({ ok: true, framework: 'express', flavor: 'listen', service: '留言板', message: '服务运行中' });
 });
 
