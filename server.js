@@ -11,7 +11,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 const asyncHandler = (fn) => (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
 
 app.get('/api/health', (req, res) => {
-  res.json({ ok: true, framework: 'express', flavor: 'listen', service: '留言板', message: '服务运行中' });
+  res.json({ ok: true, framework: 'express', flavor: 'listen', service: '留言板修改efc代码', message: '服务运行中' });
 });
 
 app.get('/api/users/:id', asyncHandler(async (req, res) => {
@@ -19,7 +19,7 @@ app.get('/api/users/:id', asyncHandler(async (req, res) => {
   res.json({ user: req.params.id, source: 'express', ...profile });
 }));
 
-app.post('/api/echo', asyncHandler(async (req, res) => {
+app.post('/api/echo/', asyncHandler(async (req, res) => {
   res.json({ received: req.body, echoed: true, timestamp: new Date().toISOString() });
 }));
 
