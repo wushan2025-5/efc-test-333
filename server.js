@@ -5,9 +5,6 @@ import { fileURLToPath } from 'node:url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
 
-const RESPONSE_DELAY_MS = 1500;
-const delay = (ms) => (req, res, next) => setTimeout(next, ms);
-
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
