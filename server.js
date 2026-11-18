@@ -5,8 +5,12 @@ import { fileURLToPath } from 'node:url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
 
+const RESPONSE_DELAY_MS = 2000;
+const delay = (ms) => (req, res, next) => setTimeout(next, ms);
+
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
+app.use('/api', delay(RESPONSE_DELAY_MS));
 
 const asyncHandler = (fn) => (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
 
