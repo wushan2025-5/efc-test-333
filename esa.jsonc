@@ -11,7 +11,7 @@
     // 函数规格，基础版固定为 1c2g
     "instanceType": "1C2G",
     // 每个部署区域的最小实例数
-    "minInstances": 100,
+    "minInstances": 0,
     // 单实例可同时执行的请求数
     //"concurrency": 200,
     "timeout": 600,
