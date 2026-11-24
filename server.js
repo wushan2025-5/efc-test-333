@@ -29,10 +29,7 @@ app.get('/api/health', (req, res) => {
    // 5) RPC 调用存储过程
   const { data: rpc } = await supabase.rpc('get_user_total', { uid: 1 });
 
-  // 6) Storage 文件上传（Supabase 存储桶）
-  await supabase.storage.from('avatars').upload(`u1/${Date.now()}.png`, req.body);
-
-  return res.json({ list, rpc });
+  res.json({ list, rpc });
   //res.json({ ok: true, framework: 'express', flavor: 'listen', service: '留言板修改efc代码', message: '服务运行中' });
 });
 
