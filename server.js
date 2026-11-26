@@ -84,3 +84,22 @@ function handler(req) {
 
   return Response.json({ content, count: listed.objects?.length, url });
 }
+
+// 全局错误处理中间件（四参数，Express 识别为错误处理器）
+app.use((err, req, res, next) => {
+  if (err.type === 'entity.parse.failed') {
+    res.status(400).json({ error: 'invalid_json', message: '请求体必须是合法的 JSON 对象或数组' });
+    return;
+  }
+  if (err.type === 'entity.too.large') {
+    res.status(413).json({ error: 'body_too_large', message: '请求体超过大小限制' });
+    return;
+  }
+  console.error('[error-handler]', err.message);
+  res.status(500).json({ error: 'internal', message: err.message });
+});
+
+const port = process.env.PORT || 3000;
+app.listen(port, () => {
+  console.log(`listening on port ${port}`);
+});
