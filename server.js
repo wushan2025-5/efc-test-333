@@ -44,9 +44,9 @@ export async function getOSS() {
   const c = await cred.getCredential(); // 每次取到的都是当前有效的临时凭证
   // <别名> 示例为 ASSETS；默认走内网，直接用 _INTERNAL（如需公网改用 _PUBLIC）
   return new OSS({
-    region: process.env.OSS_ASSETS_REGION,
-    bucket: process.env.OSS_ASSETS_BUCKET,
-    endpoint: process.env.OSS_ASSETS_ENDPOINT_INTERNAL,   // 默认内网
+    region: process.env.I3X5_OSS_ASSETS_REGION,
+    bucket: process.env.I3X5_OSS_ASSETS_BUCKET,
+    endpoint: process.env.I3X5_OSS_ASSETS_ENDPOINT_INTERNAL,   // 默认内网
     accessKeyId: c.accessKeyId,
     accessKeySecret: c.accessKeySecret,
     stsToken: c.securityToken,                   // STS 必须带
