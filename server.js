@@ -34,8 +34,8 @@ app.get('/api/error-demo', asyncHandler(async () => {
 // ---------------------------------------------------------------------------
 // RDS Supabase 读写路由（supabase-js SDK / Data API 通道）
 // ---------------------------------------------------------------------------
-const supabaseUrl = process.env.PQGU_SUPABASE_URL;
-const supabaseKey = process.env.PQGU_SUPABASE_ANON_KEY;
+const supabaseUrl = process.env.XIEU_SUPABASE_URL_HTTP;
+const supabaseKey = process.env.XIEU_SUPABASE_ANON_KEY;
 const supabase = supabaseUrl && supabaseKey
   ? createClient(supabaseUrl, supabaseKey, { auth: { persistSession: false, autoRefreshToken: false } })
   : null;
