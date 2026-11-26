@@ -13,7 +13,7 @@
     // 每个部署区域的最小实例数
     //"minInstances": 1,
     // 单实例可同时执行的请求数
-    "concurrency": 10,
+    "concurrency": 300,
     "timeout": 600,
   "idleTimeout": 600
   }
