@@ -1,14 +1,17 @@
 {
-  "name": "express-listen-backend-test",
+  "name": "efc-test-333-mns",
   "version": "0.0.0",
   "private": true,
   "type": "module",
+  "engines": {
+    "node": "22.20.0"
+  },
   "scripts": {
     "start": "node server.js"
   },
   "dependencies": {
     "express": "^4.18.0",
-    "ali-oss": "^6.21.0",
+    "@alicloud/mns": "^1.2.0",
     "@alicloud/credentials": "^2.4.0"
   }
 }
