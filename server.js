@@ -21,7 +21,7 @@ const asyncHandler = (fn) => (req, res, next) => Promise.resolve(fn(req, res, ne
 // ===== MNS 客户端：运行时凭证链（STS 自动轮转），env 名按平台实际注入 KGQ4_* =====
 // 注入值只有公网 endpoint（不带 scheme），这里补 http://；accountId 从 endpoint host 首段解析
 function mnsEndpoint() {
-  const ep = process.env.KGQ4_MNS_ASSETS_ENDPOINT_PUBLIC || '';
+  const ep = process.env.ETBX_MNS_ASSETS_ENDPOINT_PUBLIC || '';
   return /^https?:\/\//i.test(ep) ? ep : 'http://' + ep;
 }
 function mnsAccountId() {
@@ -33,7 +33,7 @@ async function getMNS() {
   const c = await cred.getCredential();
   const ep = mnsEndpoint();
   return new MNSClient(mnsAccountId(), {
-    region: process.env.KGQ4_MNS_REGION,
+    region: process.env.ETBX_MNS_REGION,
     accessKeyId: c.accessKeyId,
     accessKeySecret: c.accessKeySecret,
     securityToken: c.securityToken,
@@ -47,7 +47,7 @@ async function getMNS() {
   });
 }
 
-const topic = () => process.env.KGQ4_MNS_QUEUE_NAME || 'demo-topic';
+const topic = () => process.env.ETBX_MNS_TOPIC_NAME || 'demo-topic';
 const XMLNS = 'http://mns.aliyuncs.com/doc/v1/';
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
