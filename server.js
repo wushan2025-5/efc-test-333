@@ -44,7 +44,7 @@ async function getOSS() {
   return new OSS({
     region: process.env.I3X5_OSS_ASSETS_REGION,
     bucket: process.env.I3X5_OSS_ASSETS_BUCKET,
-    endpoint: process.env.I3X5_OSS_ASSETS_ENDPOINT_INTERNAL, // 默认内网；公网改 _PUBLIC
+    endpoint: process.env.I3X5_OSS_ASSETS_ENDPOINT_PUBLIC, // 默认内网；公网改 _PUBLIC
     accessKeyId: c.accessKeyId,
     accessKeySecret: c.accessKeySecret,
     stsToken: c.securityToken,
