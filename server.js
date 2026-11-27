@@ -1,105 +1,97 @@
-// Express + app.listen 风格
-// 演示：异步路由包装（asyncHandler）+ 全局错误处理中间件 + 静态文件托管
-// 平台自动拦截 listen 端口；本地用 process.env.PORT || 3000
-import OSS from 'ali-oss';
-import Credential from '@alicloud/credentials';
+// MNS 主题模型 demo（ESA RegionFunction / express，统一 ESM）
+// 参考 PRD 第六章：接入链路默认内网 + STS 凭证链；推送链路 MNS 从公网 POST 到本函数 /api/mns/callback。
+// 仅主题（Topic）模式，不做队列拉取。
+import express from 'express';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import MNSClient from '@alicloud/mns';
+import CredentialMod from '@alicloud/credentials';
 
-const express = require('express');
-const path = require('path');
-const { createClient } = require('@supabase/supabase-js');
+const Credential = CredentialMod.default || CredentialMod;
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
 
+// 推送回调是 XML/JSON 文本，单独用 text 解析；其余路由用 json
+app.use('/api/mns/callback', express.text({ type: () => true }));
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-// async 路由包装器：把 Promise rejection 转给错误中间件
 const asyncHandler = (fn) => (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
 
-app.get('/api/health', (req, res) => {
-  res.json({ ok: true, framework: 'express', flavor: 'listen', service: '留言板', message: '服务运行中' });
-});
-
-app.get('/api/users/:id', asyncHandler(async (req, res) => {
-  // 模拟异步查库
-  const profile = await Promise.resolve({ name: `访客#${req.params.id}`, avatar: `/avatars/${req.params.id}.png` });
-  res.json({ user: req.params.id, source: 'express', ...profile });
-}));
-
-app.post('/api/echo', asyncHandler(async (req, res) => {
-  res.json({ received: req.body, echoed: true, timestamp: new Date().toISOString() });
-}));
-
-// 演示全局错误处理：抛出异常会被下方错误中间件捕获
-app.get('/api/error-demo', asyncHandler(async () => {
-  throw new Error('演示错误：Express 全局错误中间件已捕获');
-}));
-
-// lib/oss.js —— 用运行时凭证链创建 OSS 客户端（默认内网）
-// 凭证由平台动态下发并自动轮转，代码中不出现任何长期或静态密钥
-
-
-// 凭证链：自动从平台凭证服务(ALIBABA_CLOUD_CREDENTIALS_URI)拉取 STS 并在过期前续期
-const cred = new Credential();
-export async function getOSS() {
-  const c = await cred.getCredential(); // 每次取到的都是当前有效的临时凭证
-  // <别名> 示例为 ASSETS；默认走内网，直接用 _INTERNAL（如需公网改用 _PUBLIC）
-  return new OSS({
-    region: process.env.I3X5_OSS_ASSETS_REGION,
-    bucket: process.env.I3X5_OSS_ASSETS_BUCKET,
-    endpoint: process.env.I3X5_OSS_ASSETS_ENDPOINT_INTERNAL,   // 默认内网
+// ===== MNS 客户端：运行时凭证链（STS 自动轮转），env 名按平台实际注入 KGQ4_* =====
+// 注入值只有公网 endpoint（不带 scheme），这里补 http://；accountId 从 endpoint host 首段解析
+function mnsEndpoint() {
+  const ep = process.env.KGQ4_MNS_ASSETS_ENDPOINT_PUBLIC || '';
+  return /^https?:\/\//i.test(ep) ? ep : 'http://' + ep;
+}
+function mnsAccountId() {
+  return mnsEndpoint().replace(/^https?:\/\//i, '').split('/')[0].split('.')[0];
+}
+let cred = null;
+async function getMNS() {
+  if (!cred) cred = new Credential();
+  const c = await cred.getCredential();
+  const ep = mnsEndpoint();
+  return new MNSClient(mnsAccountId(), {
+    region: process.env.KGQ4_MNS_REGION,
     accessKeyId: c.accessKeyId,
     accessKeySecret: c.accessKeySecret,
-    stsToken: c.securityToken,                   // STS 必须带
-    secure: true,
-    // 长时间运行时，SDK 通过凭证链自动续期，避免用过期凭证
+    securityToken: c.securityToken,
+    endpoint: ep,
+    internal: false, // 注入的是公网接入点
+    secure: ep.startsWith('https'),
     refreshSTSToken: async () => {
       const n = await cred.getCredential();
-      return { accessKeyId: n.accessKeyId, accessKeySecret: n.accessKeySecret, stsToken: n.securityToken };
+      return { accessKeyId: n.accessKeyId, accessKeySecret: n.accessKeySecret, securityToken: n.securityToken };
     },
-    refreshSTSTokenInterval: 15 * 60 * 1000,
   });
 }
 
-function handler(req) {
-  const client = await getOSS();
+const topic = () => process.env.KGQ4_MNS_QUEUE_NAME || 'demo-topic';
+const XMLNS = 'http://mns.aliyuncs.com/doc/v1/';
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
-  // 1) 写入对象（Put）
-  await client.put('hello.txt', Buffer.from('hello oss'));
+app.get('/api/health', (req, res) => res.json({ ok: true, service: 'mns-demo', model: 'topic' }));
 
-  // 2) 读取对象（Get）
-  const res = await client.get('hello.txt');
-  const content = res.content.toString();
+// 6.1 发布消息（接入链路）
+app.post('/api/mns/publish', asyncHandler(async (req, res) => {
+  const client = await getMNS();
+  const body = req.body?.message ?? JSON.stringify({ orderId: 1001, ts: Date.now() });
+  const params = { MessageBody: typeof body === 'string' ? body : JSON.stringify(body) };
+  if (req.body?.tag) params.MessageTag = String(req.body.tag);
+  const r = await client.publishMessage(topic(), params);
+  res.json({ ok: true, messageId: r.body.MessageId });
+}));
 
-  // 3) 列举对象（List）
-  const listed = await client.list({ prefix: 'logs/', 'max-keys': 100 });
+// 6.2 创建主题 + 把云函数公网地址订阅为 HTTP 推送端点
+// SDK 的 subscribe 是空 stub，这里用底层 put 拼 XML 实现
+app.post('/api/mns/setup', asyncHandler(async (req, res) => {
+  const client = await getMNS();
+  const endpoint = req.body?.endpoint || process.env.MNS_EVENTS_CALLBACK_URL;
+  if (!endpoint) return res.status(400).json({ ok: false, error: '需要推送端点：body.endpoint 或 env MNS_EVENTS_CALLBACK_URL（必须公网，形如 https://<函数公网域名>/api/mns/callback）' });
+  try { await client.createTopic(topic(), {}); } catch (e) {
+    if (!/TopicAlreadyExist/i.test(`${e.name} ${e.message}`)) throw e;
+  }
+  const subName = req.body?.subName || 'sub-to-cloudfn';
+  const xml = Buffer.from(`<Subscription xmlns="${XMLNS}"><Endpoint>${esc(endpoint)}</Endpoint><NotifyContentFormat>JSON</NotifyContentFormat><NotifyStrategy>EXPONENTIAL_DECAY_RETRY</NotifyStrategy></Subscription>`);
+  await client.put(`/topics/${topic()}/subscriptions/${encodeURIComponent(subName)}`, 'Subscription', xml);
+  res.json({ ok: true, topic: topic(), subName, endpoint });
+}));
 
-  // 4) 生成带签名的临时下载 URL（前端直传/直读）
-  const url = client.signatureUrl('hello.txt', { expires: 3600 });
+// 6.3 接收推送（推送链路）：存内存 inbox，返回 201 + 规范 XML，否则 MNS 重试
+const inbox = [];
+app.post('/api/mns/callback', (req, res) => {
+  inbox.unshift({ time: new Date().toISOString(), raw: String(req.body || '') });
+  if (inbox.length > 50) inbox.length = 50;
+  res.status(201).type('text/xml').send('<?xml version="1.0" encoding="UTF-8"?><Notification><ReceiptHandle>ok</ReceiptHandle></Notification>');
+});
 
-  // 5) 删除对象（Delete）
-  await client.delete('hello.txt');
+app.get('/api/mns/pushed', (req, res) => res.json({ ok: true, messages: inbox }));
 
-  // 6) 分片/流式上传大文件
-  // await client.multipartUpload('big.zip', someStream);
-
-  return Response.json({ content, count: listed.objects?.length, url });
-}
-
-// 全局错误处理中间件（四参数，Express 识别为错误处理器）
 app.use((err, req, res, next) => {
-  if (err.type === 'entity.parse.failed') {
-    res.status(400).json({ error: 'invalid_json', message: '请求体必须是合法的 JSON 对象或数组' });
-    return;
-  }
-  if (err.type === 'entity.too.large') {
-    res.status(413).json({ error: 'body_too_large', message: '请求体超过大小限制' });
-    return;
-  }
   console.error('[error-handler]', err.message);
   res.status(500).json({ error: 'internal', message: err.message });
 });
 
 const port = process.env.PORT || 3000;
-app.listen(port, () => {
-  console.log(`listening on port ${port}`);
-});
+app.listen(port, () => console.log(`listening on port ${port}`));
