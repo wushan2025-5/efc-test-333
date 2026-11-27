@@ -21,7 +21,7 @@ const asyncHandler = (fn) => (req, res, next) => Promise.resolve(fn(req, res, ne
 // ===== MNS 客户端：运行时凭证链（STS 自动轮转），env 名按平台实际注入 KGQ4_* =====
 // 注入值只有公网 endpoint（不带 scheme），这里补 http://；accountId 从 endpoint host 首段解析
 function mnsEndpoint() {
-  const ep = process.env.WWVB_MNS_ASSETS_ENDPOINT_INTERNAL || '';
+  const ep = process.env.WWVB_MNS_ASSETS_ENDPOINT_PUBLIC || '';
   return /^https?:\/\//i.test(ep) ? ep : 'http://' + ep;
 }
 function mnsAccountId() {
